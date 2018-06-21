@@ -20,9 +20,10 @@ class ZhihuItem(scrapy.Item):
     publishTime = scrapy.Field() # 《S6》
     level = scrapy.Field() # 《S9》 1 or 2
     commentID = scrapy.Field() # 《ID》for level 2 or "1"
+    comment_count = scrapy.Field() #《12》回复数
     like = scrapy.Field() # 《S13》
     authorName = scrapy.Field() # 《G1》eg:盖子
-    authirID = scrapy.Field() # 《G0》
+    authorID = scrapy.Field() # 《G0》
     Content = scrapy.Field() # 《Q1》
 
 

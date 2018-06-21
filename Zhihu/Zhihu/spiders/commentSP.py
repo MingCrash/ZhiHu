@@ -8,8 +8,6 @@ import time
 import json
 import re
 
-# response.body.decode('unicode_escape')
-
 class CommentspSpider(scrapy.Spider):
     name = 'commentSP'
     allowed_domains = ['zhihu.com']
@@ -41,6 +39,9 @@ class CommentspSpider(scrapy.Spider):
     def get_localtime(self):
         return time.strftime("%Y-%m-%d", time.localtime())
 
+    def get_createtime(self,secs):
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(secs))
+
     def start_requests(self):
         for i in settings.get('SEARCHWORD'):
             for j in range(0, settings.get('OFFSET')):
@@ -49,7 +50,7 @@ class CommentspSpider(scrapy.Spider):
                     self.question_params['offset'] = j * self.question_params['limit']
                     paramters = urllib.parse.urlencode(self.question_params)
                     api_link = 'https://www.zhihu.com/api/v4/search_v3?{paramtes}'.format(paramtes=paramters)
-                    print('<————————————api_link————————————>\n',api_link)
+                    print('<————————————关键字',i,'首页链接————————————>\n',api_link,'\n<——————————————————————————————————>')
                     yield Request(url=api_link, callback=self.question_parse, meta={'kw': i})
                 else:
                     break
@@ -64,29 +65,29 @@ class CommentspSpider(scrapy.Spider):
                     itemCommentCount = item['object']['comment_count']
 
                     if itemType == 'article':
-                        tmparticleTitle = item['object']['title']
-                        articleTitle = re.sub('<em>(.*)</em>',response.meta['kw'],tmparticleTitle,1)
+                        # tmparticleTitle = item['object']['title']
+                        # articleTitle = re.sub('<em>(.*)</em>',response.meta['kw'],tmparticleTitle,1)
                         articleURL = 'https://zhuanlan.zhihu.com/p/{id}'.format(id=item['object']['id'])
-                        print(articleTitle,articleURL,itemCommentCount,'article')
-                        # yield Request(url=articleURL,callback=self.artical_page_parse,meta={'kw':response.meta['kw'],'id':item['object']['id']})
+                        # print(articleTitle,articleURL,itemCommentCount,'article')
+                        yield Request(url=articleURL,callback=self.artical_parse,meta={'kw':response.meta['kw'],'id':item['object']['id']})
 
                     elif itemType == 'answer' and itemCommentCount>0:
                         tmpquestionTitle = item['object']['question']['name']
                         questionTitle = re.sub('<em>(.*)</em>',response.meta['kw'],tmpquestionTitle,1)
-                        questionURL = 'https://www.zhihu.com/question/{id}/answers/created'.format(id=item['object']['question']['id'])
-                        # self.urlCreate_And_Send(id=item['object']['question']['id'],search_key=response.meta['kw'])
-                        print(questionTitle,questionURL,itemCommentCount,'question')
+                        # questionURL = 'https://www.zhihu.com/question/{id}/answers/created'.format(id=item['object']['question']['id'])
+                        # print(questionTitle,questionURL,itemCommentCount,'question')
+                        # print('问题：',questionTitle)
+
                         self.anserws_meet_end = False
                         self.anserws_params['offset'] = 0
                         while not self.anserws_meet_end:
                             paramters = urllib.parse.urlencode(self.anserws_params)
                             questionURL = 'https://www.zhihu.com/api/v4/questions/{id}/answers?{paramtes}'.format(id=item['object']['question']['id'],paramtes=paramters)
-                            print('https://www.zhihu.com/api/v4/questions/{id}/answers  ',self.anserws_params['offset'])
                             yield Request(url=questionURL, callback=self.answer_parse, meta={'kw': response.meta['kw']})
                             self.anserws_params['offset'] += self.anserws_params['limit']
-                            time.sleep(3)                       #--*-- 这个数值必须大于download delay值 --*--
+                            time.sleep(5)                       #--*-- 这个数值必须大于download delay值 --*--
                     else:
-                        print('pass a data at')
+                        print('标题>>>>>',questionTitle,'<<<<<属于无回答问题，跳过\n')
                         continue
         else:
             return
@@ -104,13 +105,15 @@ class CommentspSpider(scrapy.Spider):
                 pipleitem['searchWord'] = response.meta['kw']
                 pipleitem['Title'] = item['question']['title']
                 pipleitem['crawlTime'] = self.get_localtime()
-                pipleitem['publishTime'] = time.asctime(time.localtime(item['created_time']))
+                pipleitem['publishTime'] = self.get_createtime(item['created_time'])
                 pipleitem['level'] = 1
                 pipleitem['commentID'] = 1
+                pipleitem['comment_count'] = item['comment_count']
                 pipleitem['like'] = item['voteup_count']
                 pipleitem['authorName'] = item['author']['name']
-                pipleitem['authirID'] = item['author']['id']
-                pipleitem['Content'] = item['content']
+                pipleitem['authorID'] = item['author']['id']
+                pipleitem['Content'] = item['excerpt']
+                yield pipleitem
                 if item['comment_count'] > 0:
                     self.comment_meet_end = False
                     self.comment_parmas['offset'] = 0
@@ -119,8 +122,8 @@ class CommentspSpider(scrapy.Spider):
                         url = 'https://www.zhihu.com/api/v4/answers/{id}/comments?{paramters}'.format(id=item['id'],paramters=paramas)
                         yield Request(url=url, callback=self.comment_parse, meta={'answerid':item['id'], 'kw':response.meta['kw'], 'title':item['question']['title']})
                         self.comment_parmas['offset'] += self.comment_parmas['limit']
-                        time.sleep(3)                       #--*-- 这个数值必须大于download delay值 --*--
-                print('--------------------ANSWER--------------------\n', pipleitem,'\n--------------------ANSWER--------------------\n')
+                        time.sleep(5)                       #--*-- 这个数值必须大于download delay值 --*--
+                # print('--------------------ANSWER--------------------\n',response.url,'\n',pipleitem,'\n--------------------ANSWER--------------------\n')
         else:
             return
 
@@ -138,13 +141,14 @@ class CommentspSpider(scrapy.Spider):
                 pipleitem['searchWord'] = response.meta['kw']
                 pipleitem['Title'] = response.meta['title']
                 pipleitem['crawlTime'] = self.get_localtime()
-                pipleitem['publishTime'] = time.asctime(time.localtime(item['created_time']))
+                pipleitem['publishTime'] = self.get_createtime(item['created_time'])
                 pipleitem['level'] = 2
                 pipleitem['like'] = item['vote_count']
                 pipleitem['authorName'] = item['author']['member']['name']
-                pipleitem['authirID'] = item['author']['member']['id']
+                pipleitem['authorID'] = item['author']['member']['id']
                 pipleitem['Content'] = item['content']
-                print('--------------------COMMENT--------------------\n', pipleitem,'\n--------------------COMMENT--------------------\n')
+                # print('--------------------COMMENT--------------------\n',response.url,'\n',pipleitem,'\n--------------------COMMENT--------------------\n')
+                yield pipleitem
         return
 
     def artical_parse(self, response):
@@ -156,14 +160,15 @@ class CommentspSpider(scrapy.Spider):
         pipleitem['searchWord'] = response.meta['kw']
         pipleitem['Title'] = response.css('.Post-Header .Post-Title').xpath('string(.)').extract_first()
         pipleitem['crawlTime'] = self.get_localtime()
-        pipleitem['publishTime'] = response.css('.ContentItem-time span::text').extract_first()
+        created_secs = int(re.findall('&quot;created&quot;:(\d*)',response.body.decode())[0])
+        pipleitem['publishTime'] = self.get_createtime(secs=created_secs)
         pipleitem['level'] = 1
         pipleitem['authorName'] = response.css('.AuthorInfo-name .UserLink-link').xpath('text()').extract_first()
-        pipleitem['authirID'] = response.css('.AuthorInfo-name .UserLink-link').xpath('@href').extract_first()
+        pipleitem['authorID'] = response.css('.AuthorInfo-name .UserLink-link').xpath('@href').extract_first()
         pipleitem['commentID'] = 1
         pipleitem['Content'] = response.css('#root .Post-RichText').xpath('string(.)').extract_first()
-        # print('文章',pipleitem)
-        return
+        # print('--------------------ARTICLE--------------------\n', response.url, '\n', pipleitem,'\n--------------------ARTICLE--------------------\n')
+        return pipleitem
 
 
 

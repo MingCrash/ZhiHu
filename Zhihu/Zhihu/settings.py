@@ -11,6 +11,8 @@
 
 #-----------------------------搜索选项---------------------------------
 SEARCHWORD = ['锐界']
+STORE_PATH = '/Users/Ming/Documents/pycharm-projects/ZhiHu/Zhihu/ResultPackage'
+FILE_SIZE = 16777216
 OFFSET = 1
 RANGE = ''         #'' or 1d or 1w or 3m
 LIMITTIME = None
@@ -72,9 +74,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'Zhihu.pipelines.ZhihuPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'Zhihu.pipelines.Size16M_Pipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
