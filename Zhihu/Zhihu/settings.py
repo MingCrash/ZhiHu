@@ -13,12 +13,10 @@
 SEARCHWORD = ['锐界']
 STORE_PATH = '/Users/Ming/Documents/pycharm-projects/ZhiHu/Zhihu/ResultPackage'
 FILE_SIZE = 16777216
-OFFSET = 1
+QUESTION_OFFSET = 1
 RANGE = ''         #'' or 1d or 1w or 3m
-LIMITTIME = None
-COMPRESSION_ENABLED = False
+LIMIT_TIME = None
 #---------------------------------------------------------------------
-
 
 BOT_NAME = 'Zhihu'
 SPIDER_MODULES = ['Zhihu.spiders']
@@ -29,6 +27,8 @@ NEWSPIDER_MODULE = 'Zhihu.spiders'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
+
+COMPRESSION_ENABLED = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
