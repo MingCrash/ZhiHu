@@ -44,7 +44,7 @@ class CommentspSpider(scrapy.Spider):
 
     def start_requests(self):
         for i in settings.get('SEARCHWORD'):
-            for j in range(0, settings.get('OFFSET')):
+            for j in range(0, settings.get('QUESTION_OFFSET')):
                 if not self.question_meet_end:
                     self.question_params['q'] = i
                     self.question_params['offset'] = j * self.question_params['limit']
