@@ -10,10 +10,10 @@
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 #-----------------------------搜索选项---------------------------------
-SEARCHWORD = ['锐界']
-STORE_PATH = '/Users/Ming/Documents/pycharm-projects/ZhiHu/Zhihu/ResultPackage'
-FILE_SIZE = 16777216
-QUESTION_OFFSET = 2   #设置拿多少次包
+SEARCHWORD = ['中餐厅']
+STORE_PATH = r'/Users/Ming/Documents/pycharm-projects/ZhiHu/Zhihu/ResultPackage'
+FILE_SIZE = 1677
+QUESTION_OFFSET = 9   #设置拿多少次包
 RANGE = ''         #'' or 1d or 1w or 3m
 LIMIT_TIME = None
 #---------------------------------------------------------------------

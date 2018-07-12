@@ -87,7 +87,9 @@ class CommentspSpider(scrapy.Spider):
                             self.anserws_params['offset'] += self.anserws_params['limit']
                             time.sleep(5)                       #--*-- 这个数值必须大于download delay值 --*--
                     else:
-                        print('标题>>>>>',questionTitle,'<<<<<属于无回答问题，跳过\n')
+                        tmpquestionTitle = item['object']['question']['name']
+                        questionTitless = re.sub('<em>(.*)</em>', response.meta['kw'], tmpquestionTitle, 1)
+                        print('标题>>>>>',questionTitless,'<<<<<属于无回答问题，跳过\n')
                         continue
         else:
             return
